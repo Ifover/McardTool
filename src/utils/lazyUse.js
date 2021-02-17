@@ -4,6 +4,7 @@ import {
     Message,
     Tree,
     Button,
+    DropdownMenu,
     Dropdown,
     DropdownItem,
 } from 'view-design';
@@ -11,5 +12,6 @@ import {
 Vue.prototype.$Message = Message
 Vue.component('Tree', Tree);
 Vue.component('Button', Button);
+Vue.component('DropdownMenu', DropdownMenu);
 Vue.component('Dropdown', Dropdown);
 Vue.component('DropdownItem', DropdownItem);

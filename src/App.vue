@@ -13,16 +13,13 @@
       </p>
       <div class="card-box">
         <Tree :data="treeData"
+              :render="renderContent"
               show-checkbox check-directly
               multiple
-              @on-check-change="handleCheckChange"
-              @on-contextmenu="handleContextMenu"
-        >
-          <template slot="contextMenu">
-            <DropdownItem>编辑</DropdownItem>
-            <DropdownItem style="color: #ed4014">删除</DropdownItem>
-          </template>
+              @on-check-change="handleCheckChange">
+
         </Tree>
+
       </div>
     </fieldset>
     <div class="control-box">
@@ -64,6 +61,96 @@ const renderCard = function (h, {root, node, data}, item) {
         width: '80px'
       }
     }, getTheme(getCard(item.id)[1])[1]),
+    //开始
+    h('Dropdown',
+        {
+          props: {transfer: true, trigger: 'contextMenu', placement: 'bottom'},
+          nativeOn: {
+            mousedown: ($event) => {
+              $event.stopPropagation();
+              if ($event.button === 2) {//$event.button === 0鼠标左键    $event.button === 2鼠标右键  $event.button === 1鼠标滚轮
+                //引入jquery  连续点击右键出下拉菜单，将上一个下拉菜单隐藏
+                var dropdownMenuId = "dropdown" + $($event.target).attr("id").substring(5);
+                $("#" + dropdownMenuId).css("display", "block");
+                $("#" + dropdownMenuId).parent(".ivu-select-dropdown").siblings(".ivu-select-dropdown").children(".ivu-dropdown-menu").css("display", "none");
+              }
+            }
+          }
+        },
+        [
+          h('a',
+              {
+                style: {
+                  color: '#333'
+                },
+                domProps: {
+                  id: "title" + data.code
+                }
+              }, data.title),
+          h('DropdownMenu',
+              {
+                slot: 'list',
+                style: {
+                  display: "block"
+                },
+                domProps: {
+                  id: "dropdown" + data.code
+                }
+              },
+              [
+                h('DropdownItem', {
+                  style: {
+                    fontSize: '14px !important',
+                    color: '#333',
+                    textAlign: 'center',
+                    display: data.children ? 'block' : 'none'
+                  },
+                  nativeOn: {
+                    click: ($event) => {
+                      $event.stopPropagation();
+                    }
+                  }
+                }, '添加同级目录'),
+                h('DropdownItem', {
+                  style: {
+                    fontSize: '14px !important',
+                    color: '#1081CE',
+                    textAlign: 'center'
+                  },
+                  nativeOn: {
+                    click: ($event) => {
+                      $event.stopPropagation();
+                    }
+                  }
+                }, '添加子节点'),
+                h('DropdownItem', {
+                  style: {
+                    fontSize: '14px !important',
+                    color: '#19BE6B',
+                    textAlign: 'center'
+                  },
+                  nativeOn: {
+                    click: ($event) => {
+                      $event.stopPropagation();
+                    }
+                  }
+                }, '修改'),
+                h('DropdownItem', {
+                  style: {
+                    fontSize: '14px !important',
+                    color: '#FF0000',
+                    textAlign: 'center'
+                  },
+                  nativeOn: {
+                    click: ($event) => {
+                      $event.stopPropagation();
+                    }
+                  }
+                }, '删除')
+              ]
+          )
+        ])
+    //结束
   ])
 }
 export default {
@@ -75,14 +162,158 @@ export default {
       treeData: [],
       selectTree: [],
       randChance: 0,
+      dropStyle: {}
     };
   },
   mounted() {
     this.loadCardBox()
   },
   methods: {
-    handleContextMenu() {
-
+    renderContent(h, {root, node, data}) {
+      return h('span', {
+        style: {
+          display: 'inline-block',
+          width: '100%'
+        },
+      }, [
+        h('Dropdown', {
+          props: {transfer: true, trigger: 'contextMenu', placement: 'bottom'},
+        }, [
+          h('div', {
+            style: {
+              display: 'flex'
+            }
+          }, [
+            h('p', {
+              style: {
+                width: '140px'
+              }
+            }, (data.unlock ? (data.unlock !== '0' ? '[锁]' : '') : '') + getCardName(data.id)),
+            h('p', {
+              style: {
+                width: '40px'
+              }
+            }, getCard(data.id)[3]),
+            h('p', {
+              style: {
+                width: '80px'
+              }
+            }, getTheme(getCard(data.id)[1])[1]),
+          ])
+        ])
+      ])
+      // console.log(root, node, data);
+      // return h('div', {
+      //   style: {
+      //     display: 'flex'
+      //   }
+      // }, [
+      //   h('p', {
+      //     style: {
+      //       width: '140px'
+      //     }
+      //   }, (data.unlock ? (data.unlock !== '0' ? '[锁]' : '') : '') + getCardName(data.id)),
+      //   h('p', {
+      //     style: {
+      //       width: '40px'
+      //     }
+      //   }, getCard(data.id)[3]),
+      //   h('p', {
+      //     style: {
+      //       width: '80px'
+      //     }
+      //   }, getTheme(getCard(data.id)[1])[1]),
+      //   // //开始
+      //   // h('Dropdown',
+      //   //     {
+      //   //       props: {transfer: true, trigger: 'contextMenu', placement: 'bottom'},
+      //   //       nativeOn: {
+      //   //         mousedown: ($event) => {
+      //   //           $event.stopPropagation();
+      //   //           if ($event.button === 2) {//$event.button === 0鼠标左键    $event.button === 2鼠标右键  $event.button === 1鼠标滚轮
+      //   //             //引入jquery  连续点击右键出下拉菜单，将上一个下拉菜单隐藏
+      //   //             var dropdownMenuId = "dropdown" + $($event.target).attr("id").substring(5);
+      //   //             $("#" + dropdownMenuId).css("display", "block");
+      //   //             $("#" + dropdownMenuId).parent(".ivu-select-dropdown").siblings(".ivu-select-dropdown").children(".ivu-dropdown-menu").css("display", "none");
+      //   //           }
+      //   //         }
+      //   //       }
+      //   //     },
+      //   //     [
+      //   //       h('a',
+      //   //           {
+      //   //             style: {
+      //   //               color: '#333'
+      //   //             },
+      //   //             domProps: {
+      //   //               id: "title" + data.code
+      //   //             }
+      //   //           }, data.title),
+      //   //       h('DropdownMenu',
+      //   //           {
+      //   //             slot: 'list',
+      //   //             style: {
+      //   //               display: "block"
+      //   //             },
+      //   //             domProps: {
+      //   //               id: "dropdown" + data.code
+      //   //             }
+      //   //           },
+      //   //           [
+      //   //             h('DropdownItem', {
+      //   //               style: {
+      //   //                 fontSize: '14px !important',
+      //   //                 color: '#333',
+      //   //                 textAlign: 'center',
+      //   //                 display: data.children ? 'block' : 'none'
+      //   //               },
+      //   //               nativeOn: {
+      //   //                 click: ($event) => {
+      //   //                   $event.stopPropagation();
+      //   //                 }
+      //   //               }
+      //   //             }, '添加同级目录'),
+      //   //             h('DropdownItem', {
+      //   //               style: {
+      //   //                 fontSize: '14px !important',
+      //   //                 color: '#1081CE',
+      //   //                 textAlign: 'center'
+      //   //               },
+      //   //               nativeOn: {
+      //   //                 click: ($event) => {
+      //   //                   $event.stopPropagation();
+      //   //                 }
+      //   //               }
+      //   //             }, '添加子节点'),
+      //   //             h('DropdownItem', {
+      //   //               style: {
+      //   //                 fontSize: '14px !important',
+      //   //                 color: '#19BE6B',
+      //   //                 textAlign: 'center'
+      //   //               },
+      //   //               nativeOn: {
+      //   //                 click: ($event) => {
+      //   //                   $event.stopPropagation();
+      //   //                 }
+      //   //               }
+      //   //             }, '修改'),
+      //   //             h('DropdownItem', {
+      //   //               style: {
+      //   //                 fontSize: '14px !important',
+      //   //                 color: '#FF0000',
+      //   //                 textAlign: 'center'
+      //   //               },
+      //   //               nativeOn: {
+      //   //                 click: ($event) => {
+      //   //                   $event.stopPropagation();
+      //   //                 }
+      //   //               }
+      //   //             }, '删除')
+      //   //           ]
+      //   //       )
+      //   //     ])
+      //   // //结束
+      // ])
     },
     async handleSell() {
       this.isSelling = true
@@ -138,17 +369,16 @@ export default {
         let changebox = []
         let storeboxbox = []
         for (let item of res.changebox.card) {
-          if (item.id !== '0') {
+          if (item.id !== '0' && item.id !== '-1') {
             changebox.push({
               ...item,
               uid: `0_${item.slot}_${item.id}`,
               cardName: getCardName(item.id),
               cardPrice: getCard(item.id)[3],
               themeName: getTheme(getCard(item.id)[1])[1],
-              contextmenu: true,
-              render: (h, {root, node, data}) => {
-                return renderCard(h, {root, node, data}, item)
-              }
+              // render: (h, {root, node, data}) => {
+              //   return renderCard(h, {root, node, data}, item)
+              // }
             })
           }
         }
@@ -160,9 +390,9 @@ export default {
               cardName: getCardName(item.id),
               cardPrice: getCard(item.id)[3],
               themeName: getTheme(getCard(item.id)[1])[1],
-              render: (h, {root, node, data}) => {
-                return renderCard(h, {root, node, data}, item)
-              }
+              // render: (h, {root, node, data}) => {
+              //   return renderCard(h, {root, node, data}, item)
+              // }
             })
           }
         }
@@ -172,13 +402,19 @@ export default {
             return v.id !== '0'
           }).length}/${res.changebox.cur}]`,
           children: changebox,
-          expand: true
+          expand: true,
+          render: (h, {root, node, data}) => {
+            return h('span', {}, data.title)
+          }
         })
         treeData.push({
           uid: 'x2',
           title: `保险箱[${res.storebox.card.length}/${res.storebox.cur}]`,
           children: storeboxbox,
-          expand: true
+          expand: true,
+          render: (h, {root, node, data}) => {
+            return h('span', {}, data.title)
+          }
         })
 
         this.treeData = treeData
