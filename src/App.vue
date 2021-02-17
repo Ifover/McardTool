@@ -1,7 +1,11 @@
 <template>
   <div id="container">
     <fieldset>
-      <legend>我的卡箱[<a title="点我刷新" @click="handleReload">刷</a>]</legend>
+      <legend>
+        我的卡箱
+        [<a title="点我刷新" @click="handleReload">刷</a>]
+        [<a @click="handleRandomGet">抽({{ randChance }})</a>]
+      </legend>
       <p style="display: flex;width:320px;margin-left: 60px;">
         <span style="display: inline-block;flex: 1">卡名</span>
         <span style="display: inline-block;width: 50px;">价格</span>
@@ -12,7 +16,13 @@
               show-checkbox check-directly
               multiple
               @on-check-change="handleCheckChange"
-        ></Tree>
+              @on-contextmenu="handleContextMenu"
+        >
+          <template slot="contextMenu">
+            <DropdownItem>编辑</DropdownItem>
+            <DropdownItem style="color: #ed4014">删除</DropdownItem>
+          </template>
+        </Tree>
       </div>
     </fieldset>
     <div class="control-box">
@@ -20,7 +30,11 @@
                   title="勾起来然后卖掉"
                   :loading="isSelling"
                   :disabled="selectTree.length === 0"
-                  @click="handleSell">{{ isSelling ? `卖卡中[${sellNum}/${selectTree.length}]` : '卖卡' }}</Button>
+                  @click="handleSell">{{
+              isSelling ? `卖卡中[${sellNum}/${selectTree.filter(v => {
+                return v.id
+              }).length}]` : '一键卖卡'
+            }}</Button>
     </div>
 
 
@@ -60,12 +74,16 @@ export default {
       sellNum: 0,
       treeData: [],
       selectTree: [],
+      randChance: 0,
     };
   },
   mounted() {
     this.loadCardBox()
   },
   methods: {
+    handleContextMenu() {
+
+    },
     async handleSell() {
       this.isSelling = true
       for (let item of this.selectTree) {
@@ -91,6 +109,18 @@ export default {
       this.selectTree = nodes
       console.log(nodes);
     },
+    // 一键抽取
+    handleRandomGet() {
+      let data = {
+        type: 2
+      }
+      this.$axios.post("/card_user_random_get", data).then(res => {
+        this.$Message.success("抽好了")
+        this.loadCardBox()
+
+      })
+
+    },
     // 刷新
     async handleReload() {
       await this.loadCardBox()
@@ -104,9 +134,9 @@ export default {
       };
       let treeData = []
       await this.$axios.post("/card_user_mainpage", data).then((res) => {
+        //#region 塞卡
         let changebox = []
         let storeboxbox = []
-
         for (let item of res.changebox.card) {
           if (item.id !== '0') {
             changebox.push({
@@ -115,6 +145,7 @@ export default {
               cardName: getCardName(item.id),
               cardPrice: getCard(item.id)[3],
               themeName: getTheme(getCard(item.id)[1])[1],
+              contextmenu: true,
               render: (h, {root, node, data}) => {
                 return renderCard(h, {root, node, data}, item)
               }
@@ -149,7 +180,10 @@ export default {
           children: storeboxbox,
           expand: true
         })
+
         this.treeData = treeData
+        //#endregion
+        this.randChance = res.user.randchance  //随机次数
       })
     }
   }
